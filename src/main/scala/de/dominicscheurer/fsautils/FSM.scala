@@ -5,8 +5,8 @@ package de.dominicscheurer.fsautils {
   import RegularExpressions._
 
   abstract class FSM {
-    def isDFA = this.isInstanceOf[DFA]
-    def isNFA = this.isInstanceOf[NFA]
+    def isDFA: Boolean = this.isInstanceOf[DFA]
+    def isNFA: Boolean = this.isInstanceOf[NFA]
     def asDFA: Option[DFA] =
       if (isDFA)
         Some(this.asInstanceOf[DFA])

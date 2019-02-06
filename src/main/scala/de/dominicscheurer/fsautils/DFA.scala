@@ -9,13 +9,15 @@ package de.dominicscheurer.fsautils {
   import scala.xml.Node
 
   import Predef.{ any2stringadd => _, _ }
+import de.dominicscheurer.fsautils.DFA
 
   class DFA(
     var alphabet: Set[Letter],
     var states: Set[State],
     var initialState: State,
     var delta: ((State, Letter) => State),
-    var accepting: Set[State]) extends FSM {
+    var accepting: Set[State])
+    extends FSM {
 
     require(states contains initialState)
     require(accepting subsetOf states)
@@ -36,9 +38,10 @@ package de.dominicscheurer.fsautils {
       (alphabet ++ newLetters, states, initialState, delta, accepting): DFA
     }
 
-    def unary_! : DFA = new DFA(alphabet, states, initialState, delta, states -- accepting)
+    def unary_! : DFA =
+      new DFA(alphabet, states, initialState, delta, states -- accepting)
 
-    def * : NFA = (this: NFA)*
+    def * : NFA = (this: NFA) *
 
     def ++(other: NFA): DFA =
       ((this: NFA) ++ other) toDFA
@@ -56,7 +59,12 @@ package de.dominicscheurer.fsautils {
         case _ => throw new Exception("Impossible case")
       }
 
-      (alphabet, productStates, pair(initialState, other.initialState), productDelta _, Set(): Set[State])
+      (
+        alphabet,
+        productStates,
+        pair(initialState, other.initialState),
+        productDelta _,
+        Set(): Set[State])
     }
 
     def &(other: DFA): DFA = {
@@ -65,7 +73,12 @@ package de.dominicscheurer.fsautils {
       val intersAccepting = cartesianStateProduct(accepting, other.accepting)
       val product = productAutomaton(other)
 
-      (alphabet, product.states, product.initialState, product.delta, intersAccepting)
+      (
+        alphabet,
+        product.states,
+        product.initialState,
+        product.delta,
+        intersAccepting)
     }
 
     def &(other: NFA): NFA = {
@@ -81,7 +94,12 @@ package de.dominicscheurer.fsautils {
         cartesianStateProduct(states, other.accepting)
       val product = productAutomaton(other)
 
-      (alphabet, product.states, product.initialState, product.delta, unionAccepting)
+      (
+        alphabet,
+        product.states,
+        product.initialState,
+        product.delta,
+        unionAccepting)
     }
 
     def |(other: NFA): NFA = {
@@ -108,13 +126,15 @@ package de.dominicscheurer.fsautils {
     def ==(other: NFA): Boolean =
       this == other.toDFA
 
-    def isEmpty: Boolean = accepting.forall(s => !traverseDFS(List(initialState), List()).contains(s))
+    def isEmpty: Boolean =
+      accepting.forall(s =>
+        !traverseDFS(List(initialState), List()).contains(s))
 
     def toRegExp: RE = {
       // Rename states: 1 .. n
       val renDFA = this getRenamedCopy 1
-      renDFA.accepting.foldLeft(Empty(): RE)(
-        (re, s) => re + renDFA.alpha(renDFA.states.size, renDFA initialState, s))
+      renDFA.accepting.foldLeft(Empty(): RE)((re, s) =>
+        re + renDFA.alpha(renDFA.states.size, renDFA initialState, s))
     }
 
     def getRenamedCopy(startVal: Int): DFA = {
@@ -141,7 +161,9 @@ package de.dominicscheurer.fsautils {
         List()
       } else {
         val next = toVisit head
-        val succ = alphabet.map(l => delta(next, l)).toList diff toVisit diff visited
+        val succ = alphabet
+          .map(l => delta(next, l))
+          .toList diff toVisit diff visited
 
         next :: traverseDFS(toVisit.tail ++ succ, next :: visited)
       }
@@ -149,15 +171,23 @@ package de.dominicscheurer.fsautils {
 
     def minimize: DFA = {
       // first, remove unreachable states
-      val reachableStates = states intersect (Set() ++ traverseDFS(List(initialState), List()))
+      val reachableStates = states intersect (Set() ++ traverseDFS(
+        List(initialState),
+        List()))
       val reachableAccepting = accepting intersect reachableStates
 
       val rel = (reachableStates -- reachableAccepting)
         .foldLeft(new AntiReflSymmRel(): AntiReflSymmRel[State])(
-          (rel, s) => rel ++ reachableAccepting.foldLeft(Set(): Set[(State, State)])(
-            (set, a) => set + (s -> a)))
+          (rel, s) =>
+            rel ++ reachableAccepting
+              .foldLeft(Set(): Set[(State, State)])((set, a) => set + (s -> a)))
 
-      val reachDFA = (alphabet, reachableStates, initialState, delta, reachableAccepting): DFA
+      val reachDFA = (
+        alphabet,
+        reachableStates,
+        initialState,
+        delta,
+        reachableAccepting): DFA
 
       reachDFA minimize rel
     }
@@ -165,12 +195,14 @@ package de.dominicscheurer.fsautils {
     @tailrec
     private def minimize(rel: AntiReflSymmRel[State]): DFA = {
       val cartProd = cartesianProduct(states, states)
-      val differentPairs = cartProd.filter(p => p match {
-        case (k, l) => rel.inRel(k, l) ||
-          alphabet.foldLeft(false)(
-            (acc, a) => acc || rel.inRel(delta(k, a), delta(l, a)))
-        case _ => throw new Exception("Should not happen")
-      })
+      val differentPairs = cartProd.filter(p =>
+        p match {
+          case (k, l) =>
+            rel.inRel(k, l) ||
+              alphabet.foldLeft(false)((acc, a) =>
+                acc || rel.inRel(delta(k, a), delta(l, a)))
+          case _ => throw new Exception("Should not happen")
+        })
 
       val newRel = rel ++ differentPairs
 
@@ -184,18 +216,23 @@ package de.dominicscheurer.fsautils {
         val eqRel: EquivRel[State] =
           new EquivRel() ++ cartProd.filter(p => !rel.inRel(p._1, p._2))
 
-        val newStates = eqRel.equivalenceClasses.map(
-          setOfStates => set(setOfStates)): Set[State]
+        val newStates = eqRel.equivalenceClasses.map(setOfStates =>
+          set(setOfStates)): Set[State]
 
-        val newInitialState = newStates.filter(state => state match {
-          case set(setOfStates: Set[State]) => setOfStates contains initialState
-          case _ => throw new Exception("Impossible case.")
-        }) head: State
+        val newInitialState = newStates
+          .filter(state =>
+            state match {
+              case set(setOfStates: Set[State]) =>
+                setOfStates contains initialState
+              case _ => throw new Exception("Impossible case.")
+            }) head: State
 
-        val newAccepting = newStates.filter(state => state match {
-          case set(setOfStates: Set[State]) => (setOfStates intersect accepting).nonEmpty
-          case _ => throw new Exception("Impossible case.")
-        }): Set[State]
+        val newAccepting = newStates.filter(state =>
+          state match {
+            case set(setOfStates: Set[State]) =>
+              (setOfStates intersect accepting).nonEmpty
+            case _ => throw new Exception("Impossible case.")
+          }): Set[State]
 
         def newDelta(state: State, letter: Letter): State =
           (state) match {
@@ -203,10 +240,13 @@ package de.dominicscheurer.fsautils {
               val someState = setOfStates head
               val transResult = delta(someState, letter)
 
-              newStates.filter(state => state match {
-                case set(setOfStates: Set[State]) => setOfStates contains transResult
-                case _ => throw new Exception("Impossible case.")
-              }) head
+              newStates
+                .filter(state =>
+                  state match {
+                    case set(setOfStates: Set[State]) =>
+                      setOfStates contains transResult
+                    case _ => throw new Exception("Impossible case.")
+                  }) head
             }
             case _ => throw new Exception("Impossible case.")
           }
@@ -227,7 +267,7 @@ package de.dominicscheurer.fsautils {
           .foldLeft(Empty(): RE)((re, a) => re + a)
 
         if (from == to) {
-          (Empty()*) + oneStepTransitions
+          (Empty() *) + oneStepTransitions
         } else {
           oneStepTransitions
         }
@@ -236,14 +276,16 @@ package de.dominicscheurer.fsautils {
           case (q(l), q(m)) =>
             alpha(k - 1, q(l), q(m)) +
               (alpha(k - 1, q(l), q(k)) &
-                (alpha(k - 1, q(k), q(k))*) &
+                (alpha(k - 1, q(k), q(k)) *) &
                 alpha(k - 1, q(k), q(m)))
 
-          case _ => throw new Exception("Should not happen: Call toRegExp() and not this method")
+          case _ =>
+            throw new Exception(
+              "Should not happen: Call toRegExp() and not this method")
         }
       }
 
-    override def toString = {
+    override def toString: String = {
       val indentSpace = "    "
       val indentBeginner = "|"
       val indent = "|" + indentSpace
@@ -255,23 +297,29 @@ package de.dominicscheurer.fsautils {
       sb ++= toStringUpToDelta(
         indentBeginner,
         indentSpace,
-        "Z", alphabet,
-        "S", states,
-        "q0", initialState,
-        "A", accepting);
+        "Z",
+        alphabet,
+        "S",
+        states,
+        "q0",
+        initialState,
+        "A",
+        accepting);
 
       sb ++= indent ++= "d = {"
-      states.foreach(s =>
-        alphabet.foreach(l =>
-          sb ++= "\n"
-            ++= dindent
-            ++= "("
-            ++= s.toString
-            ++= ","
-            ++= l.name
-            ++= ") => "
-            ++= delta(s, l).toString
-            ++= ","))
+      states.foreach(
+        s =>
+          alphabet.foreach(
+            l =>
+              sb ++= "\n"
+                ++= dindent
+                ++= "("
+                ++= s.toString
+                ++= ","
+                ++= l.name
+                ++= ") => "
+                ++= delta(s, l).toString
+                ++= ","))
       sb = sb.dropRight(1 - alphabet.isEmpty)
       sb ++= "\n" ++= indent ++= "}\n"
 
@@ -309,7 +357,7 @@ package de.dominicscheurer.fsautils {
   }
 
   object DFA {
-    def Empty = {
+    def Empty: DFA = {
       val alphabet = Set('a): Set[Letter]
       val states = Set(q(0)): Set[State]
       def initial = q(0): State
@@ -355,32 +403,39 @@ package de.dominicscheurer.fsautils {
         <state>5</state>
     </accepting>
 </dfa>
-             */
-      val alphabet = (node \ "alphabet" \ "letter") map {
-        lNode => Symbol(lNode.text)
+       */
+      val alphabet = (node \ "alphabet" \ "letter") map { lNode =>
+        Symbol(lNode.text)
       }: Seq[Letter]
 
-      val states = (node \ "states" \ "state") map {
-        sNode => q(sNode.text.toInt)
+      val states = (node \ "states" \ "state") map { sNode =>
+        q(sNode.text.toInt)
       }: Seq[State]
 
       val initialState = q((node \ "initialState").text.toInt): State
 
       def delta(state: State, letter: Letter): State = {
-        val transitions = (node \ "delta" \ "transition").foldLeft(Map[(State, Letter), State]())(
-          (map: Map[(State, Letter), State], elem: scala.xml.Node) =>
-            map + (
-              (q((elem \ "@from").text.toInt), Symbol((elem \ "@trigger").text)) ->
-              q((elem \ "@to").text.toInt))): Map[(State, Letter), State]
+        val transitions = (node \ "delta" \ "transition")
+          .foldLeft(Map[(State, Letter), State]())(
+            (map: Map[(State, Letter), State], elem: scala.xml.Node) =>
+              map + ((
+                q((elem \ "@from").text.toInt),
+                Symbol((elem \ "@trigger").text)) ->
+                q((elem \ "@to").text.toInt))): Map[(State, Letter), State]
 
         transitions(state, letter)
       }
 
-      val accepting = (node \ "accepting" \ "state") map {
-        sNode => q(sNode.text.toInt)
+      val accepting = (node \ "accepting" \ "state") map { sNode =>
+        q(sNode.text.toInt)
       }: Seq[State]
 
-      new DFA(alphabet.toSet, states.toSet, initialState, delta _, accepting.toSet)
+      new DFA(
+        alphabet.toSet,
+        states.toSet,
+        initialState,
+        delta _,
+        accepting.toSet)
     }
   }
 }

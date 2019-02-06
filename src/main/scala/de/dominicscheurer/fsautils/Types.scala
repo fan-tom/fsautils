@@ -10,11 +10,11 @@ package de.dominicscheurer.fsautils {
     abstract sealed class State
 
     case class q(i: Int) extends State {
-      override def toString = i toString
+      override def toString: String = i toString
     }
 
     case class set(s: Set[State]) extends State {
-      override def toString = {
+      override def toString: String = {
         var sb = new StringBuilder
 
         sb ++= s.foldLeft("{")((result, state) => result + state.toString + ",")

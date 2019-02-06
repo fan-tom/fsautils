@@ -1,6 +1,5 @@
 package de.dominicscheurer.fsautils
 
-import Types._
 
 object Relations {
   class AntiReflSymmRel[A] private (val values: Set[(A, A)]) {
@@ -19,10 +18,10 @@ object Relations {
     def inRel(a: A, b: A): Boolean =
       values.contains(a -> b)
 
-    def ==(other: AntiReflSymmRel[A]) =
+    def ==(other: AntiReflSymmRel[A]): Boolean =
       values.equals(other.values)
 
-    def !=(other: AntiReflSymmRel[A]) =
+    def !=(other: AntiReflSymmRel[A]): Boolean =
       !values.equals(other.values)
 
   }
@@ -43,10 +42,10 @@ object Relations {
     def inRel(a: A, b: A): Boolean =
       map.contains(a -> b)
 
-    def ==(other: EquivRel[A]) =
+    def ==(other: EquivRel[A]): Boolean =
       map.equals(other.map)
 
-    def !=(other: EquivRel[A]) =
+    def !=(other: EquivRel[A]): Boolean =
       !map.equals(other.map)
 
     def equivalenceClasses: Set[Set[A]] = {
@@ -59,7 +58,10 @@ object Relations {
       }
     }
 
-    private def equivalenceClasses(forElem: A, seen: List[A], rest: List[A]): Set[Set[A]] = {
+    private def equivalenceClasses(
+      forElem: A,
+      seen: List[A],
+      rest: List[A]): Set[Set[A]] = {
       val classForElem = (rest ++ seen)
         .filter(p => inRel(forElem, p))
         .foldLeft(Set(): Set[A])((set, p) => set + p) + forElem: Set[A]
@@ -74,8 +76,7 @@ object Relations {
     }
 
     private def getValues(map: Set[(A, A)]): Set[A] =
-      map.foldLeft(Set(): Set[A])((acc, p) =>
-        acc + p._1 + p._2)
+      map.foldLeft(Set(): Set[A])((acc, p) => acc + p._1 + p._2)
 
     private def addTransitive[A, B](s: Set[(A, B)]) = {
       s ++ (for ((x1, y1) <- s; (x2, y2) <- s if y1 == x2) yield (x1, y2))

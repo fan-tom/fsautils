@@ -9,7 +9,8 @@ package de.dominicscheurer.fsautils {
     var states: Set[State],
     var initialState: State,
     var delta: ((State, Letter) => Set[State]), //Power Set instead of Relation
-    var accepting: Set[State]) extends FSM {
+    var accepting: Set[State])
+    extends FSM {
 
     require(states contains initialState)
     require(accepting subsetOf states)
@@ -40,7 +41,7 @@ package de.dominicscheurer.fsautils {
     def * : NFA = {
       // Avoid name clash for case where new start state has to be added
       if (!(this acceptsEmptyWord) && states.contains(q(0))) {
-        (getRenamedCopy(1)*): NFA
+        (getRenamedCopy(1) *): NFA
       }
 
       def deltaStar(state: State, letter: Letter): Set[State] = {
@@ -61,7 +62,12 @@ package de.dominicscheurer.fsautils {
             deltaStar(state, letter)
           }
 
-        (alphabet, states + newInitialState, newInitialState, deltaStar2 _, accepting + newInitialState)
+        (
+          alphabet,
+          states + newInitialState,
+          newInitialState,
+          deltaStar2 _,
+          accepting + newInitialState)
 
       } else {
 
@@ -94,7 +100,12 @@ package de.dominicscheurer.fsautils {
         case _ => throw new Exception("Impossible case")
       }
 
-      (alphabet, productStates, pair(initialState, other.initialState), productDelta _, Set(): Set[State])
+      (
+        alphabet,
+        productStates,
+        pair(initialState, other.initialState),
+        productDelta _,
+        Set(): Set[State])
     }
 
     def &(other: NFA): NFA = {
@@ -103,7 +114,12 @@ package de.dominicscheurer.fsautils {
       val intersAccepting = cartesianStateProduct(accepting, other.accepting)
       val product = productAutomaton(other)
 
-      (alphabet, product.states, product.initialState, product.delta, intersAccepting)
+      (
+        alphabet,
+        product.states,
+        product.initialState,
+        product.delta,
+        intersAccepting)
     }
 
     def &(other: DFA): NFA = {
@@ -128,9 +144,19 @@ package de.dominicscheurer.fsautils {
             other.delta(s, l)
 
         if ((this acceptsEmptyWord) || (other acceptsEmptyWord))
-          (alphabet, states ++ other.states + q(0), q(0), newDelta _, accepting ++ other.accepting + q(0))
+          (
+            alphabet,
+            states ++ other.states + q(0),
+            q(0),
+            newDelta _,
+            accepting ++ other.accepting + q(0))
         else
-          (alphabet, states ++ other.states + q(0), q(0), newDelta _, accepting ++ other.accepting)
+          (
+            alphabet,
+            states ++ other.states + q(0),
+            q(0),
+            newDelta _,
+            accepting ++ other.accepting)
       }
     }
 
@@ -167,7 +193,12 @@ package de.dominicscheurer.fsautils {
           case _ => throw new Exception("Impossible case")
         }
 
-      val interm = (alphabet, Set(pInitialState), pInitialState, pDelta _, Set(pInitialState)): DFA
+      val interm = (
+        alphabet,
+        Set(pInitialState),
+        pInitialState,
+        pDelta _,
+        Set(pInitialState)): DFA
       val pStates = interm.traverseDFS(List(pInitialState), List()).toSet
       val pAccepting = pStates.filter {
         case (set(setOfStates)) => (setOfStates intersect accepting) nonEmpty
@@ -197,7 +228,9 @@ package de.dominicscheurer.fsautils {
     }
 
     def removeUnreachable: NFA = {
-      val reachableStates = states intersect (traverseDFS(List(initialState), List()).toSet)
+      val reachableStates = states intersect (traverseDFS(
+        List(initialState),
+        List()).toSet)
       val reachableAccepting = accepting intersect reachableStates
 
       (alphabet, reachableStates, initialState, delta, reachableAccepting): NFA
@@ -207,17 +240,28 @@ package de.dominicscheurer.fsautils {
       if (this acceptsEmptyWord) {
 
         val noEpsAccepting = accepting - initialState
-        val concatNoEps = ((alphabet, states, initialState, delta, noEpsAccepting): NFA) concat other
+        val concatNoEps = ((
+          alphabet,
+          states,
+          initialState,
+          delta,
+          noEpsAccepting): NFA) concat other
 
         val statesCup = concatNoEps.states + q(-1)
 
         def deltaCup(state: State, letter: Letter): Set[State] =
           if (state == q(-1))
-            concatNoEps.delta(initialState, letter) ++ other.delta(other.initialState, letter)
+            concatNoEps.delta(initialState, letter) ++ other.delta(
+              other.initialState,
+              letter)
           else
             concatNoEps.delta(state, letter)
 
-        ((alphabet ++ other.alphabet, statesCup, q(-1), deltaCup _, concatNoEps.accepting): NFA) getRenamedCopy 0
+        ((alphabet ++ other.alphabet,
+          statesCup,
+          q(-1),
+          deltaCup _,
+          concatNoEps.accepting): NFA) getRenamedCopy 0
 
       } else {
 
@@ -234,18 +278,25 @@ package de.dominicscheurer.fsautils {
               deltaRes
           }
 
-        (alphabet ++ other.alphabet, statesCup, initialState, deltaCup _, other.accepting)
+        (alphabet ++ other.alphabet,
+          statesCup,
+          initialState,
+          deltaCup _,
+          other.accepting)
 
       }
     }
 
-    private def traverseDFS(toVisit: List[State], visited: List[State]): List[State] = {
+    private def traverseDFS(
+      toVisit: List[State],
+      visited: List[State]): List[State] = {
       if (toVisit isEmpty) {
         List()
       } else {
         val next = toVisit head
-        val succ = alphabet.foldLeft(Set(): Set[State])(
-          (acc, l) => acc ++ delta(next, l)).toList diff toVisit diff visited
+        val succ = alphabet
+          .foldLeft(Set(): Set[State])((acc, l) => acc ++ delta(next, l))
+          .toList diff toVisit diff visited
 
         next :: traverseDFS(toVisit.tail ++ succ, next :: visited)
       }
@@ -282,7 +333,7 @@ package de.dominicscheurer.fsautils {
       </nfa>
     }
 
-    override def toString = {
+    override def toString: String = {
       val indentSpace = "    "
       val indentBeginner = "|"
       val indent = "|" + indentSpace
@@ -294,26 +345,36 @@ package de.dominicscheurer.fsautils {
       sb ++= toStringUpToDelta(
         indentBeginner,
         indentSpace,
-        "Z", alphabet,
-        "S", states,
-        "q0", initialState,
-        "A", accepting);
+        "Z",
+        alphabet,
+        "S",
+        states,
+        "q0",
+        initialState,
+        "A",
+        accepting);
 
       sb ++= indent ++= "D = {"
-      states.foreach(s =>
-        alphabet.filter(l => !delta(s, l).isEmpty).foreach(l =>
-          sb ++= "\n"
-            ++= dindent
-            ++= "("
-            ++= s.toString
-            ++= ","
-            ++= l.name
-            ++= ") => "
-            ++= (if (delta(s, l).isEmpty) "{}"
-            else
-              delta(s, l).foldLeft("")(
-                (result, aState) => result + aState.toString + " | ").stripSuffix(" | "))
-            ++= ","))
+      states.foreach(
+        s =>
+          alphabet
+            .filter(l => !delta(s, l).isEmpty)
+            .foreach(
+              l =>
+                sb ++= "\n"
+                  ++= dindent
+                  ++= "("
+                  ++= s.toString
+                  ++= ","
+                  ++= l.name
+                  ++= ") => "
+                  ++= (if (delta(s, l).isEmpty) "{}"
+                  else
+                    delta(s, l)
+                      .foldLeft("")((result, aState) =>
+                        result + aState.toString + " | ")
+                      .stripSuffix(" | "))
+                  ++= ","))
       sb = sb.dropRight(1 - alphabet.isEmpty)
       sb ++= "\n" ++= indent ++= "}\n"
 
@@ -343,20 +404,22 @@ package de.dominicscheurer.fsautils {
     <state>1</state>
   </accepting>
 </nfa>
-             */
-      val alphabet = (node \ "alphabet" \ "letter") map {
-        lNode => Symbol(lNode.text)
+       */
+      val alphabet = (node \ "alphabet" \ "letter") map { lNode =>
+        Symbol(lNode.text)
       }: Seq[Letter]
 
-      val states = (node \ "states" \ "state") map {
-        sNode => q(sNode.text.toInt)
+      val states = (node \ "states" \ "state") map { sNode =>
+        q(sNode.text.toInt)
       }: Seq[State]
 
       val initialState = q((node \ "initialState").text.toInt): State
 
       def delta(state: State, letter: Letter): Set[State] = {
-        val transitions = (node \ "delta" \ "transition").foldLeft(Map[(State, Letter), Set[State]]())(
-          (map: Map[(State, Letter), Set[State]], elem: scala.xml.Node) => {
+        val transitions = (node \ "delta" \ "transition").foldLeft(
+          Map[(State, Letter), Set[State]]())((
+            map: Map[(State, Letter), Set[State]],
+            elem: scala.xml.Node) => {
             val from = q((elem \ "@from").text.toInt): State
             val trigger = Symbol((elem \ "@trigger").text): Letter
             val to = q((elem \ "@to").text.toInt): State
@@ -375,11 +438,16 @@ package de.dominicscheurer.fsautils {
           Set()
       }
 
-      val accepting = (node \ "accepting" \ "state") map {
-        sNode => q(sNode.text.toInt)
+      val accepting = (node \ "accepting" \ "state") map { sNode =>
+        q(sNode.text.toInt)
       }: Seq[State]
 
-      new NFA(alphabet.toSet, states.toSet, initialState, delta _, accepting.toSet)
+      new NFA(
+        alphabet.toSet,
+        states.toSet,
+        initialState,
+        delta _,
+        accepting.toSet)
     }
   }
 }

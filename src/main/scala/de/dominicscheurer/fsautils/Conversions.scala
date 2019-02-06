@@ -1,9 +1,10 @@
 package de.dominicscheurer.fsautils {
   import Types._
   import RegularExpressions._
+import de.dominicscheurer.fsautils.Types
 
   object Conversions {
-    implicit def bool2int(b: Boolean) = if (b) 1 else 0
+    implicit def bool2int(b: Boolean): Int = if (b) 1 else 0
 
     implicit def DFAFromTuple(
       t: (Set[Letter], Set[State], State, ((State, Letter) => State), Set[State])): DFA = {
@@ -16,7 +17,10 @@ package de.dominicscheurer.fsautils {
     }
 
     implicit def DFAtoNFA[T](dfa: DFA): NFA =
-      (dfa.alphabet, dfa.states, dfa.initialState,
+      (
+        dfa.alphabet,
+        dfa.states,
+        dfa.initialState,
         (state: State, letter: Letter) => {
           try {
             Set(dfa.delta(state, letter))
@@ -26,23 +30,19 @@ package de.dominicscheurer.fsautils {
         },
         dfa.accepting)
 
-    implicit def REFromLetter(
-      letter: Letter): RE = {
+    implicit def REFromLetter(letter: Letter): RE = {
       L(letter)
     }
 
     // The following could be dangerous for short
     // regular expressions (conflicting implicits):
-    implicit def SetFromStates(
-      state: State): Set[State] =
+    implicit def SetFromStates(state: State): Set[State] =
       Set(state)
 
-    implicit def SetFromStates(
-      states: (State, State)) =
+    implicit def SetFromStates(states: (State, State)): Set[Types.State] =
       Set(states._1, states._2)
 
-    implicit def SetFromStates(
-      states: (State, State, State)) =
+    implicit def SetFromStates(states: (State, State, State)): Set[Types.State] =
       Set(states._1, states._2, states._3)
   }
 }

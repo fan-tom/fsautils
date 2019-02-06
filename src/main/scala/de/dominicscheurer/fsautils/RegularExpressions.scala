@@ -1,7 +1,8 @@
 package de.dominicscheurer.fsautils
 
 import Types._
-import Conversions._
+import de.dominicscheurer.fsautils.NFA
+import de.dominicscheurer.fsautils.Types.Letter
 
 object RegularExpressions {
 
@@ -30,7 +31,7 @@ object RegularExpressions {
      * correctness guarantees without this method (since
      * this is just string manipulation with regular expressions).
      */
-    def cleanString = recClean(toString)
+    def cleanString: String = recClean(toString)
 
     private def recClean(s: String): String = {
       val cleanRes = clean(s)
@@ -41,130 +42,141 @@ object RegularExpressions {
       }
     }
 
-    private def clean(s: String): String = s
-      .replace("{} + ", "")
-      .replace("({})*", "\u025B") // epsilon
-      .replace("{}", "\u00D8") // emptyset
-      .replace("**", "*")
-      .replaceAll("""'([a-z])""", "$1")
-      .replaceAll("""\(([a-z])\)""", "$1")
-      .replaceAll("""\(\(([^\(\)]+)\)\)\*""", "($1)*")
-      .replaceAll("""\(\u025B \+ ([^\(\)]+)\)\*""", "($1)*")
-      .replaceAll(""" [&\+] \u00D8""", "")
-      .replaceAll("""\u00D8 [&\+] """, "")
-      .replaceAll("""\(([a-z\u025B])\)([\*]?)""", "$1$2")
-      .replaceAll("""\(\(([^\(\)]+)\)\)""", "($1)")
-      .replaceAll("""\(([a-z])\*\)""", "$1*")
+    private def clean(s: String): String =
+      s.replace("{} + ", "")
+        .replace("({})*", "\u025B") // epsilon
+        .replace("{}", "\u00D8") // emptyset
+        .replace("**", "*")
+        .replaceAll("""'([a-z])""", "$1")
+        .replaceAll("""\(([a-z])\)""", "$1")
+        .replaceAll("""\(\(([^\(\)]+)\)\)\*""", "($1)*")
+        .replaceAll("""\(\u025B \+ ([^\(\)]+)\)\*""", "($1)*")
+        .replaceAll(""" [&\+] \u00D8""", "")
+        .replaceAll("""\u00D8 [&\+] """, "")
+        .replaceAll("""\(([a-z\u025B])\)([\*]?)""", "$1$2")
+        .replaceAll("""\(\(([^\(\)]+)\)\)""", "($1)")
+        .replaceAll("""\(([a-z])\*\)""", "$1*")
 
     def clean: RE = this match {
-      case Star(inner) => inner match {
-        // ((...)*)* => (...)*
-        case Star(inner2) => Star(inner2 clean)
-        // ({}* + XXX)* => (XXX)*
-        case Or(Star(Empty()), rhs) => rhs clean
-        // (XXX + {}*)* => (XXX)*
-        case Or(lhs, Star(Empty())) => lhs clean
-        case _ => Star(inner clean)
-      }
-      case Or(lhs, rhs) => lhs match {
-        // {} + (...) => (...)
-        case Empty() => rhs clean
-        case Star(Empty()) => rhs match {
-          // {}* + (...)* => (...)*
-          case Star(rhsInner) => Star(rhsInner clean)
-          case _ => Or(lhs clean, rhs clean)
+      case Star(inner) =>
+        inner match {
+          // ((...)*)* => (...)*
+          case Star(inner2) => Star(inner2 clean)
+          // ({}* + XXX)* => (XXX)*
+          case Or(Star(Empty()), rhs) => rhs clean
+          // (XXX + {}*)* => (XXX)*
+          case Or(lhs, Star(Empty())) => lhs clean
+          case _ => Star(inner clean)
         }
-        case _ => rhs match {
-          // (...) + {} => (...)
-          case Empty() => lhs clean
-          case Star(Empty()) => lhs match {
-            // (...)* + {}* => (...)*
-            case Star(lhsInner) => Star(lhsInner clean)
-            case _ => Or(lhs clean, rhs clean)
-          }
-          case _ => if (lhs equals rhs)
-            // XXX + XXX => XXX
-            lhs
-          else
-            Or(lhs clean, rhs clean)
-        }
-      }
-      case Concat(lhs, rhs) => lhs match {
-        // {} & (...) => (...)
-        case Empty() => rhs clean
-        case Or(Star(Empty()), lhsInner) => rhs match {
-          case Star(rhsInner) => {
-            val lhsInnerClean = lhsInner clean
-            val rhsInnerClean = rhsInner clean
-
-            if (lhsInnerClean equals rhsInnerClean)
-              // (eps + XXX) & (XXX)* => (XXX)*
-              Star(rhsInnerClean)
-            else
-              Concat(lhs clean, rhs clean)
-          }
-          case _ => Concat(lhs clean, rhs clean)
-        }
-        case Or(lhsInner, Star(Empty())) => rhs match {
-          case Star(rhsInner) => {
-            val lhsInnerClean = lhsInner clean
-            val rhsInnerClean = rhsInner clean
-
-            if (lhsInnerClean equals rhsInnerClean)
-              // (XXX + eps) & (XXX)* => (XXX)*
-              Star(rhsInnerClean)
-            else
-              Concat(lhs clean, rhs clean)
-          }
-          case _ => Concat(lhs clean, rhs clean)
-        }
-        case _ => rhs match {
-          // (...) + {} => (...)
-          case Empty() => lhs clean
-          case Or(rhsInner, Star(Empty())) => lhs match {
-            case Star(lhsInner) => {
-              val lhsInnerClean = lhsInner clean
-              val rhsInnerClean = rhsInner clean
-
-              if (lhsInnerClean equals rhsInnerClean)
-                // (XXX)* & (XXX + eps) => (XXX)*
-                Star(lhsInnerClean)
-              else
-                Concat(lhs clean, rhs clean)
+      case Or(lhs, rhs) =>
+        lhs match {
+          // {} + (...) => (...)
+          case Empty() => rhs clean
+          case Star(Empty()) =>
+            rhs match {
+              // {}* + (...)* => (...)*
+              case Star(rhsInner) => Star(rhsInner clean)
+              case _ => Or(lhs clean, rhs clean)
             }
-            case _ => Concat(lhs clean, rhs clean)
-          }
-          case Or(Star(Empty()), rhsInner) => lhs match {
-            case Star(lhsInner) => {
-              val lhsInnerClean = lhsInner clean
-              val rhsInnerClean = rhsInner clean
-
-              if (lhsInnerClean equals rhsInnerClean)
-                // (XXX)* & (eps + XXX) => (XXX)*
-                Star(lhsInnerClean)
-              else
-                Concat(lhs clean, rhs clean)
+          case _ =>
+            rhs match {
+              // (...) + {} => (...)
+              case Empty() => lhs clean
+              case Star(Empty()) =>
+                lhs match {
+                  // (...)* + {}* => (...)*
+                  case Star(lhsInner) => Star(lhsInner clean)
+                  case _ => Or(lhs clean, rhs clean)
+                }
+              case _ =>
+                if (lhs equals rhs)
+                  // XXX + XXX => XXX
+                  lhs
+                else
+                  Or(lhs clean, rhs clean)
             }
-            case _ => Concat(lhs clean, rhs clean)
-          }
-          case _ => Concat(lhs clean, rhs clean)
         }
-      }
+      case Concat(lhs, rhs) =>
+        lhs match {
+          // {} & (...) => (...)
+          case Empty() => rhs clean
+          case Or(Star(Empty()), lhsInner) =>
+            rhs match {
+              case Star(rhsInner) => {
+                val lhsInnerClean = lhsInner clean
+                val rhsInnerClean = rhsInner clean
+
+                if (lhsInnerClean equals rhsInnerClean)
+                  // (eps + XXX) & (XXX)* => (XXX)*
+                  Star(rhsInnerClean)
+                else
+                  Concat(lhs clean, rhs clean)
+              }
+              case _ => Concat(lhs clean, rhs clean)
+            }
+          case Or(lhsInner, Star(Empty())) =>
+            rhs match {
+              case Star(rhsInner) => {
+                val lhsInnerClean = lhsInner clean
+                val rhsInnerClean = rhsInner clean
+
+                if (lhsInnerClean equals rhsInnerClean)
+                  // (XXX + eps) & (XXX)* => (XXX)*
+                  Star(rhsInnerClean)
+                else
+                  Concat(lhs clean, rhs clean)
+              }
+              case _ => Concat(lhs clean, rhs clean)
+            }
+          case _ =>
+            rhs match {
+              // (...) + {} => (...)
+              case Empty() => lhs clean
+              case Or(rhsInner, Star(Empty())) =>
+                lhs match {
+                  case Star(lhsInner) => {
+                    val lhsInnerClean = lhsInner clean
+                    val rhsInnerClean = rhsInner clean
+
+                    if (lhsInnerClean equals rhsInnerClean)
+                      // (XXX)* & (XXX + eps) => (XXX)*
+                      Star(lhsInnerClean)
+                    else
+                      Concat(lhs clean, rhs clean)
+                  }
+                  case _ => Concat(lhs clean, rhs clean)
+                }
+              case Or(Star(Empty()), rhsInner) =>
+                lhs match {
+                  case Star(lhsInner) => {
+                    val lhsInnerClean = lhsInner clean
+                    val rhsInnerClean = rhsInner clean
+
+                    if (lhsInnerClean equals rhsInnerClean)
+                      // (XXX)* & (eps + XXX) => (XXX)*
+                      Star(lhsInnerClean)
+                    else
+                      Concat(lhs clean, rhs clean)
+                  }
+                  case _ => Concat(lhs clean, rhs clean)
+                }
+              case _ => Concat(lhs clean, rhs clean)
+            }
+        }
       case _ => this
     }
   }
 
   case class L(l: Letter) extends RE {
-    override def toString = l toString
-    override def alphabet = Set(l)
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]) = {
+    override def toString: String = l toString
+    override def alphabet: Set[Letter] = Set(l)
+    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
       val genNFA = nfa('Z, 'S, 'q0, 'd, 'A) where
         'Z ==> alph and
         'S ==> Set(0, 1) and
         'q0 ==> 0 and
         'A ==> Set(1) and
-        'd ==> Delta(
-          (0, l) -> Set(1)) ||
+        'd ==> Delta((0, l) -> Set(1)) ||
 
       cache += (this -> genNFA)
       genNFA
@@ -172,9 +184,9 @@ object RegularExpressions {
   }
 
   case class Empty() extends RE {
-    override def toString = "{}"
-    override def alphabet = Set()
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]) = {
+    override def toString: String = "{}"
+    override def alphabet: Set[Letter] = Set()
+    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
       val emptyAcc: Set[Int] = Set()
       val genNFA = nfa('Z, 'S, 'q0, 'd, 'A) where
         'Z ==> alph and
@@ -189,9 +201,9 @@ object RegularExpressions {
   }
 
   case class Star(re: RE) extends RE {
-    override def toString = "(" + re.toString + ")*"
-    override def alphabet = re.alphabet
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]) =
+    override def toString: String = "(" + re.toString + ")*"
+    override def alphabet: Set[Letter] = re.alphabet
+    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       if (re equals Empty())
         nfa('Z, 'S, 'q0, 'd, 'A) where
           'Z ==> alph and
@@ -202,7 +214,7 @@ object RegularExpressions {
       else {
         cache get this match {
           case None => {
-            val genNFA = (re toNFAInt (alph, cache))*
+            val genNFA = (re toNFAInt (alph, cache)) *
 
             cache += (this -> genNFA)
             genNFA
@@ -213,12 +225,13 @@ object RegularExpressions {
   }
 
   case class Or(lhs: RE, rhs: RE) extends RE {
-    override def toString = "(" + lhs.toString + " + " + rhs.toString + ")"
-    override def alphabet = lhs.alphabet ++ rhs.alphabet
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]) =
+    override def toString: String = "(" + lhs.toString + " + " + rhs.toString + ")"
+    override def alphabet: Set[Letter] = lhs.alphabet ++ rhs.alphabet
+    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       cache get this match {
         case None => {
-          val genNFA = ((lhs toNFAInt (alph, cache)) | (rhs toNFAInt (alph, cache))): NFA
+          val genNFA =
+            ((lhs toNFAInt (alph, cache)) | (rhs toNFAInt (alph, cache))): NFA
 
           cache += (this -> genNFA)
           genNFA
@@ -228,12 +241,13 @@ object RegularExpressions {
   }
 
   case class Concat(lhs: RE, rhs: RE) extends RE {
-    override def toString = "(" + lhs.toString + " & " + rhs.toString + ")"
-    override def alphabet = lhs.alphabet ++ rhs.alphabet
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]) =
+    override def toString: String = "(" + lhs.toString + " & " + rhs.toString + ")"
+    override def alphabet: Set[Letter] = lhs.alphabet ++ rhs.alphabet
+    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       cache get this match {
         case None => {
-          val genNFA = ((lhs toNFAInt (alph, cache)) ++ (rhs toNFAInt (alph, cache))): NFA
+          val genNFA =
+            ((lhs toNFAInt (alph, cache)) ++ (rhs toNFAInt (alph, cache))): NFA
 
           cache += (this -> genNFA)
           genNFA
