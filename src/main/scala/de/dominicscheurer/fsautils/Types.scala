@@ -1,5 +1,7 @@
+import scala.language.postfixOps
+
 package de.dominicscheurer.fsautils {
-  import Conversions._
+  import de.dominicscheurer.fsautils.Conversions._
 
   object Types {
     type Letter = Symbol

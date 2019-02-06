@@ -1,7 +1,6 @@
 package de.dominicscheurer.fsautils
 
-import Types._
-import de.dominicscheurer.fsautils.NFA
+import scala.language.postfixOps
 import de.dominicscheurer.fsautils.Types.Letter
 
 object RegularExpressions {
@@ -213,12 +212,12 @@ object RegularExpressions {
           'd ==> DeltaRel(Map()) ||
       else {
         cache get this match {
-          case None => {
+          case None =>
             val genNFA = (re toNFAInt (alph, cache)) *
 
             cache += (this -> genNFA)
             genNFA
-          }
+
           case Some(nfa) => nfa
         }
       }

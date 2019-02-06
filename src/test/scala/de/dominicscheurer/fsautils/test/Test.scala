@@ -1,11 +1,7 @@
 package de.dominicscheurer.fsautils.test
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import de.dominicscheurer.fsautils.FSA_DSL
-import de.dominicscheurer.fsautils.Types._
-import de.dominicscheurer.fsautils.DFA
-import de.dominicscheurer.fsautils.NFA
+import de.dominicscheurer.fsautils.{ DFA, FSA_DSL, NFA }
+import org.scalatest.{ FlatSpec, Matchers }
 
 class Test extends FlatSpec with Matchers with FSA_DSL {
 

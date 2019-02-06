@@ -1,14 +1,15 @@
 package de.dominicscheurer.fsautils {
-  import Types._
-  import Conversions._
-  import Helpers._
-  import RegularExpressions._
+  import scala.language.postfixOps
+  import de.dominicscheurer.fsautils.Conversions._
+  import de.dominicscheurer.fsautils.Helpers._
+  import de.dominicscheurer.fsautils.RegularExpressions._
+  import de.dominicscheurer.fsautils.Types._
 
   class NFA(
     var alphabet: Set[Letter],
     var states: Set[State],
     var initialState: State,
-    var delta: ((State, Letter) => Set[State]), //Power Set instead of Relation
+    var delta: (State, Letter) => Set[State], // Power Set instead of Relation
     var accepting: Set[State])
     extends FSM {
 
@@ -41,7 +42,7 @@ package de.dominicscheurer.fsautils {
     def * : NFA = {
       // Avoid name clash for case where new start state has to be added
       if (!(this acceptsEmptyWord) && states.contains(q(0))) {
-        (getRenamedCopy(1) *): NFA
+        getRenamedCopy(1) *: NFA
       }
 
       def deltaStar(state: State, letter: Letter): Set[State] = {
@@ -131,7 +132,7 @@ package de.dominicscheurer.fsautils {
     def |(other: NFA): NFA = {
       require(alphabet equals other.alphabet)
 
-      if (!(states intersect other.states).isEmpty
+      if ((states intersect other.states).nonEmpty
         || (states union other.states).contains(q(0)))
         getRenamedCopy(1) | other.getRenamedCopy(states.size + 1)
       else {
@@ -228,9 +229,9 @@ package de.dominicscheurer.fsautils {
     }
 
     def removeUnreachable: NFA = {
-      val reachableStates = states intersect (traverseDFS(
+      val reachableStates = states intersect traverseDFS(
         List(initialState),
-        List()).toSet)
+        List()).toSet
       val reachableAccepting = accepting intersect reachableStates
 
       (alphabet, reachableStates, initialState, delta, reachableAccepting): NFA
@@ -358,7 +359,7 @@ package de.dominicscheurer.fsautils {
       states.foreach(
         s =>
           alphabet
-            .filter(l => !delta(s, l).isEmpty)
+            .filter(l => delta(s, l).nonEmpty)
             .foreach(
               l =>
                 sb ++= "\n"

@@ -1,6 +1,7 @@
+import scala.language.implicitConversions
+
 package de.dominicscheurer.fsautils {
-  import Types._
-import de.dominicscheurer.fsautils.FSA_DSL
+  import de.dominicscheurer.fsautils.Types._
 
   trait FSA_DSL {
     case class FSABuilder(
@@ -17,7 +18,7 @@ import de.dominicscheurer.fsautils.FSA_DSL
       // Connectors for definition: "where" and "and"
       def where: ((Symbol, Any)) => FSA_DSL#FSABuilder =
         (input: (Symbol, Any)) =>
-          (input._2 match {
+          input._2 match {
             case symbols: SymbolSet =>
               input._1 match {
                 case t._1 => { alphabet = Some(symbols.set); this }
@@ -65,7 +66,7 @@ import de.dominicscheurer.fsautils.FSA_DSL
                   this
                 }
               }
-          })
+          }
 
       def and: ((Symbol, Any)) => FSA_DSL#FSABuilder = where
 
@@ -97,10 +98,8 @@ import de.dominicscheurer.fsautils.FSA_DSL
     }
 
     // Starting point: dfa/nfa function
-    def dfa(t: (Symbol, Symbol, Symbol, Symbol, Symbol)): FSA_DSL#FSABuilder =
-      FSABuilder(t, true)
-    def nfa(t: (Symbol, Symbol, Symbol, Symbol, Symbol)): FSA_DSL#FSABuilder =
-      FSABuilder(t, false)
+    def dfa(t: (Symbol, Symbol, Symbol, Symbol, Symbol)): FSA_DSL#FSABuilder = FSABuilder(t, true)
+    def nfa(t: (Symbol, Symbol, Symbol, Symbol, Symbol)): FSA_DSL#FSABuilder = FSABuilder(t, false)
 
     // Syntactic Sugar
     object Delta {
@@ -126,6 +125,6 @@ import de.dominicscheurer.fsautils.FSA_DSL
     implicit def is(set: Set[Int]): FSA_DSL#IntSet = IntSet(set)
     implicit def sts(set: Set[String]): FSA_DSL#StringSet = StringSet(set)
     implicit def sys(set: Set[Symbol]): FSA_DSL#SymbolSet = SymbolSet(set)
-    //		implicit def dfun(fun: Map[(Int, Letter), Int]) = DeltaFun(fun)
+    implicit def dfun(fun: Map[(Int, Letter), Int]): FSA_DSL#DeltaFun = DeltaFun(fun)
   }
 }

@@ -1,5 +1,6 @@
 package de.dominicscheurer.fsautils
 
+import scala.language.postfixOps
 
 object Relations {
   class AntiReflSymmRel[A] private (val values: Set[(A, A)]) {
@@ -87,7 +88,7 @@ object Relations {
       if (t.size == s.size) s else transitiveClosure(t)
     }
 
-    override def toString(): String =
+    override def toString: String =
       map toString
 
   }

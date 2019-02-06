@@ -1,5 +1,5 @@
 package de.dominicscheurer.fsautils {
-  import Types._
+  import de.dominicscheurer.fsautils.Types._
 
   object Helpers {
 

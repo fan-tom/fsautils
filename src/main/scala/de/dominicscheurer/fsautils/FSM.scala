@@ -1,8 +1,9 @@
-package de.dominicscheurer.fsautils {
 
-  import Types._
-  import Conversions._
-  import RegularExpressions._
+package de.dominicscheurer.fsautils {
+  import scala.language.postfixOps
+  import de.dominicscheurer.fsautils.Conversions._
+  import de.dominicscheurer.fsautils.RegularExpressions._
+  import de.dominicscheurer.fsautils.Types._
 
   abstract class FSM {
     def isDFA: Boolean = this.isInstanceOf[DFA]
@@ -47,14 +48,14 @@ package de.dominicscheurer.fsautils {
       sb ++= "}\n"
 
       sb ++= indent ++= statesDesignator ++= " = {"
-      states.foreach(s => sb ++= s.toString() ++= ",")
+      states.foreach(s => sb ++= s.toString ++= ",")
       sb = sb.dropRight(1 - states.isEmpty)
       sb ++= "}\n"
 
       sb ++= indent ++= initialStateDesignator ++= " = " ++= initialState.toString ++= "\n"
 
       sb ++= indent ++= acceptingDesignator ++= " = {"
-      accepting.foreach(s => sb ++= s.toString() ++= ",")
+      accepting.foreach(s => sb ++= s.toString ++= ",")
       sb = sb.dropRight(1 - accepting.isEmpty)
       sb ++= "}\n"
 

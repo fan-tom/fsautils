@@ -1,21 +1,20 @@
 package de.dominicscheurer.fsautils {
-  import Types._
-  import Conversions._
-  import Helpers._
-  import RegularExpressions._
-  import Relations._
+  import scala.language.postfixOps
+  import de.dominicscheurer.fsautils.Conversions._
+  import de.dominicscheurer.fsautils.Helpers._
+  import de.dominicscheurer.fsautils.RegularExpressions._
+  import de.dominicscheurer.fsautils.Relations._
+  import de.dominicscheurer.fsautils.Types._
 
+  import scala.Predef.{ any2stringadd => _, _ }
   import scala.annotation.tailrec
   import scala.xml.Node
-
-  import Predef.{ any2stringadd => _, _ }
-import de.dominicscheurer.fsautils.DFA
 
   class DFA(
     var alphabet: Set[Letter],
     var states: Set[State],
     var initialState: State,
-    var delta: ((State, Letter) => State),
+    var delta: (State, Letter) => State,
     var accepting: Set[State])
     extends FSM {
 
@@ -209,9 +208,8 @@ import de.dominicscheurer.fsautils.DFA
       if (rel == newRel) {
 
         // Recursion anchor:
-        // The distinguishing relation does not change in the next
-        // iteration, so we construct the resulting automaton now
-        // by "contracting" the states that are not distinguished
+        // The distinguishing relation does not change in the next iteration, so we construct the resulting
+        // automaton now by "contracting" the states that are not distinguished
 
         val eqRel: EquivRel[State] =
           new EquivRel() ++ cartProd.filter(p => !rel.inRel(p._1, p._2))
@@ -235,8 +233,8 @@ import de.dominicscheurer.fsautils.DFA
           }): Set[State]
 
         def newDelta(state: State, letter: Letter): State =
-          (state) match {
-            case set(setOfStates) => {
+          state match {
+            case set(setOfStates) =>
               val someState = setOfStates head
               val transResult = delta(someState, letter)
 
@@ -247,16 +245,14 @@ import de.dominicscheurer.fsautils.DFA
                       setOfStates contains transResult
                     case _ => throw new Exception("Impossible case.")
                   }) head
-            }
+
             case _ => throw new Exception("Impossible case.")
           }
 
         (alphabet, newStates, newInitialState, newDelta _, newAccepting): DFA
 
       } else {
-
         minimize(newRel)
-
       }
     }
 
@@ -267,7 +263,7 @@ import de.dominicscheurer.fsautils.DFA
           .foldLeft(Empty(): RE)((re, a) => re + a)
 
         if (from == to) {
-          (Empty() *) + oneStepTransitions
+          (Empty() *()) + oneStepTransitions
         } else {
           oneStepTransitions
         }
@@ -368,7 +364,7 @@ import de.dominicscheurer.fsautils.DFA
     }
 
     def fromXml(node: Node): DFA = {
-      /*
+/*
 <dfa>
     <alphabet>
         <letter>a</letter>
@@ -403,7 +399,7 @@ import de.dominicscheurer.fsautils.DFA
         <state>5</state>
     </accepting>
 </dfa>
-       */
+*/
       val alphabet = (node \ "alphabet" \ "letter") map { lNode =>
         Symbol(lNode.text)
       }: Seq[Letter]
