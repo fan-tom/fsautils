@@ -39,7 +39,7 @@ package de.dominicscheurer.fsautils {
       accepting: Set[State]): String = {
 
       val indent = indentBeginner + indentSpace
-      val dindent = indent + indentSpace
+      //val dindent = indent + indentSpace //TODO: unused?
       var sb = new StringBuilder()
 
       sb ++= indent ++= alphabetDesignator ++= " = {"

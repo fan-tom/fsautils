@@ -170,7 +170,7 @@ object RegularExpressions {
     override def toString: String = l toString
     override def alphabet: Set[Letter] = Set(l)
     override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
-      val genNFA = nfa('Z, 'S, 'q0, 'd, 'A) where
+      val genNFA = nfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
         'Z ==> alph and
         'S ==> Set(0, 1) and
         'q0 ==> 0 and
@@ -187,7 +187,7 @@ object RegularExpressions {
     override def alphabet: Set[Letter] = Set()
     override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
       val emptyAcc: Set[Int] = Set()
-      val genNFA = nfa('Z, 'S, 'q0, 'd, 'A) where
+      val genNFA = nfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
         'Z ==> alph and
         'S ==> Set(0) and
         'q0 ==> 0 and
@@ -204,7 +204,7 @@ object RegularExpressions {
     override def alphabet: Set[Letter] = re.alphabet
     override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       if (re equals Empty())
-        nfa('Z, 'S, 'q0, 'd, 'A) where
+        nfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
           'Z ==> alph and
           'S ==> Set(0) and
           'q0 ==> 0 and

@@ -25,7 +25,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
   //                                                `" ../
 
   val dfa1 =
-    dfa('Z, 'S, 'q0, 'd, 'A) where
+    dfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
       'Z ==> Set('a, 'b) and
       'S ==> Set(1, 2, 3, 4, 5, 6) and
       'q0 ==> 1 and
@@ -59,7 +59,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
   //                                  a
 
   val dfa1eqNFA =
-    nfa('Z, 'S, 'q0, 'd, 'A) where
+    nfa(('Z, 'S, 'q0, 'd, 'A)) where
       'Z ==> Set('a, 'b) and
       'S ==> Set(1, 2) and
       'q0 ==> 1 and
@@ -82,7 +82,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
   //           `'                `'                `'
 
   val dfa1eqMinDFA =
-    dfa('Z, 'S, 'q0, 'd, 'A) where
+    dfa(('Z, 'S, 'q0, 'd, 'A)) where
       'Z ==> Set('a, 'b) and
       'S ==> Set(1, 2, 3) and
       'q0 ==> 1 and

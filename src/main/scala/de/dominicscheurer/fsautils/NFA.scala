@@ -1,9 +1,10 @@
 package de.dominicscheurer.fsautils {
-  import scala.language.postfixOps
   import de.dominicscheurer.fsautils.Conversions._
   import de.dominicscheurer.fsautils.Helpers._
   import de.dominicscheurer.fsautils.RegularExpressions._
   import de.dominicscheurer.fsautils.Types._
+
+  import scala.language.postfixOps
 
   class NFA(
     var alphabet: Set[Letter],
@@ -42,7 +43,7 @@ package de.dominicscheurer.fsautils {
     def * : NFA = {
       // Avoid name clash for case where new start state has to be added
       if (!(this acceptsEmptyWord) && states.contains(q(0))) {
-        getRenamedCopy(1) *: NFA
+        (getRenamedCopy(1) *): NFA
       }
 
       def deltaStar(state: State, letter: Letter): Set[State] = {
@@ -417,24 +418,22 @@ package de.dominicscheurer.fsautils {
       val initialState = q((node \ "initialState").text.toInt): State
 
       def delta(state: State, letter: Letter): Set[State] = {
-        val transitions = (node \ "delta" \ "transition").foldLeft(
-          Map[(State, Letter), Set[State]]())((
-            map: Map[(State, Letter), Set[State]],
-            elem: scala.xml.Node) => {
+        val transitions = (node \ "delta" \ "transition").foldLeft(Map[(State, Letter), Set[State]]())(
+          (map: Map[(State, Letter), Set[State]], elem: scala.xml.Node) => {
             val from = q((elem \ "@from").text.toInt): State
             val trigger = Symbol((elem \ "@trigger").text): Letter
             val to = q((elem \ "@to").text.toInt): State
 
-            if (map contains (from, trigger)) {
-              val oldRes = map(from, trigger)
+            if (map contains ((from, trigger))) {
+              val oldRes = map((from, trigger))
               (map - ((from, trigger))) + ((from, trigger) -> (oldRes + to))
             } else {
               map + ((from, trigger) -> Set(to)): Map[(State, Letter), Set[State]]
             }
           })
 
-        if (transitions contains (state, letter))
-          transitions(state, letter)
+        if (transitions contains ((state, letter)))
+          transitions((state, letter))
         else
           Set()
       }

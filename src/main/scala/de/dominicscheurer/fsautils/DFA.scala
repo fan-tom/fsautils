@@ -1,5 +1,5 @@
 package de.dominicscheurer.fsautils {
-  import scala.language.postfixOps
+  import com.github.ghik.silencer.silent
   import de.dominicscheurer.fsautils.Conversions._
   import de.dominicscheurer.fsautils.Helpers._
   import de.dominicscheurer.fsautils.RegularExpressions._
@@ -8,6 +8,7 @@ package de.dominicscheurer.fsautils {
 
   import scala.Predef.{ any2stringadd => _, _ }
   import scala.annotation.tailrec
+  import scala.language.postfixOps
   import scala.xml.Node
 
   class DFA(
@@ -263,7 +264,7 @@ package de.dominicscheurer.fsautils {
           .foldLeft(Empty(): RE)((re, a) => re + a)
 
         if (from == to) {
-          (Empty() *()) + oneStepTransitions
+          (Empty() * ()) + oneStepTransitions
         } else {
           oneStepTransitions
         }
@@ -353,18 +354,18 @@ package de.dominicscheurer.fsautils {
   }
 
   object DFA {
-    def Empty: DFA = {
+    def empty: DFA = {
       val alphabet = Set('a): Set[Letter]
       val states = Set(q(0)): Set[State]
       def initial = q(0): State
       val accepting = Set(): Set[State]
-      def delta(s: State, l: Letter): State = q(0)
+      @silent def delta(s: State, l: Letter): State = q(0)
 
       (alphabet, states, initial, delta _, accepting): DFA
     }
 
     def fromXml(node: Node): DFA = {
-/*
+      /*
 <dfa>
     <alphabet>
         <letter>a</letter>
@@ -419,7 +420,7 @@ package de.dominicscheurer.fsautils {
                 Symbol((elem \ "@trigger").text)) ->
                 q((elem \ "@to").text.toInt))): Map[(State, Letter), State]
 
-        transitions(state, letter)
+        transitions((state, letter))
       }
 
       val accepting = (node \ "accepting" \ "state") map { sNode =>

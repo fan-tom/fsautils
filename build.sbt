@@ -19,6 +19,9 @@ lazy val root = (project in file("."))
     , name := "FSAUtils"
     , libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
     , libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
+    , libraryDependencies ++= Seq(
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.1"),
+      "com.github.ghik" %% "silencer-lib" % "1.3.1" % Provided )
 //    , libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 //    , libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
   )

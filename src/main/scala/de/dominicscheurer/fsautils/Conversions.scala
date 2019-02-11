@@ -1,5 +1,5 @@
 package de.dominicscheurer.fsautils {
- import scala.language.implicitConversions
+  import scala.language.implicitConversions
   import de.dominicscheurer.fsautils.RegularExpressions._
   import de.dominicscheurer.fsautils.Types._
 
