@@ -400,7 +400,7 @@ package de.dominicscheurer.fsautils {
         <state>5</state>
     </accepting>
 </dfa>
-*/
+       */
       val alphabet = (node \ "alphabet" \ "letter") map { lNode =>
         Symbol(lNode.text)
       }: Seq[Letter]

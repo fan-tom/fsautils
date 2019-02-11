@@ -169,7 +169,9 @@ object RegularExpressions {
   case class L(l: Letter) extends RE {
     override def toString: String = l toString
     override def alphabet: Set[Letter] = Set(l)
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
+    override def toNFAInt(
+      alph: Set[Letter],
+      cache: MutableMap[RE, NFA]): NFA = {
       val genNFA = nfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
         'Z ==> alph and
         'S ==> Set(0, 1) and
@@ -185,7 +187,9 @@ object RegularExpressions {
   case class Empty() extends RE {
     override def toString: String = "{}"
     override def alphabet: Set[Letter] = Set()
-    override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA = {
+    override def toNFAInt(
+      alph: Set[Letter],
+      cache: MutableMap[RE, NFA]): NFA = {
       val emptyAcc: Set[Int] = Set()
       val genNFA = nfa(t = ('Z, 'S, 'q0, 'd, 'A)) where
         'Z ==> alph and
@@ -224,7 +228,8 @@ object RegularExpressions {
   }
 
   case class Or(lhs: RE, rhs: RE) extends RE {
-    override def toString: String = "(" + lhs.toString + " + " + rhs.toString + ")"
+    override def toString: String =
+      "(" + lhs.toString + " + " + rhs.toString + ")"
     override def alphabet: Set[Letter] = lhs.alphabet ++ rhs.alphabet
     override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       cache get this match {
@@ -240,7 +245,8 @@ object RegularExpressions {
   }
 
   case class Concat(lhs: RE, rhs: RE) extends RE {
-    override def toString: String = "(" + lhs.toString + " & " + rhs.toString + ")"
+    override def toString: String =
+      "(" + lhs.toString + " & " + rhs.toString + ")"
     override def alphabet: Set[Letter] = lhs.alphabet ++ rhs.alphabet
     override def toNFAInt(alph: Set[Letter], cache: MutableMap[RE, NFA]): NFA =
       cache get this match {

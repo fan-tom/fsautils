@@ -41,7 +41,8 @@ package de.dominicscheurer.fsautils {
     implicit def SetFromStates(states: (State, State)): Set[Types.State] =
       Set(states._1, states._2)
 
-    implicit def SetFromStates(states: (State, State, State)): Set[Types.State] =
+    implicit def SetFromStates(
+      states: (State, State, State)): Set[Types.State] =
       Set(states._1, states._2, states._3)
   }
 }

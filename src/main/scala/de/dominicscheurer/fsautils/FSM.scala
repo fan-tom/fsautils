@@ -1,4 +1,3 @@
-
 package de.dominicscheurer.fsautils {
   import scala.language.postfixOps
   import de.dominicscheurer.fsautils.Conversions._

@@ -418,8 +418,10 @@ package de.dominicscheurer.fsautils {
       val initialState = q((node \ "initialState").text.toInt): State
 
       def delta(state: State, letter: Letter): Set[State] = {
-        val transitions = (node \ "delta" \ "transition").foldLeft(Map[(State, Letter), Set[State]]())(
-          (map: Map[(State, Letter), Set[State]], elem: scala.xml.Node) => {
+        val transitions = (node \ "delta" \ "transition").foldLeft(
+          Map[(State, Letter), Set[State]]())((
+            map: Map[(State, Letter), Set[State]],
+            elem: scala.xml.Node) => {
             val from = q((elem \ "@from").text.toInt): State
             val trigger = Symbol((elem \ "@trigger").text): Letter
             val to = q((elem \ "@to").text.toInt): State
