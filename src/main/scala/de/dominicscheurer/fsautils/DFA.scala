@@ -170,7 +170,7 @@ package de.dominicscheurer.fsautils {
     }
 
     def minimize: DFA = {
-      // first, remove unreachable states
+      // First, remove unreachable states.
       val reachableStates = states intersect (Set() ++ traverseDFS(
         List(initialState),
         List()))

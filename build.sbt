@@ -51,7 +51,7 @@ scalacOptions ++= Seq(
   "-Ywarn-unused-import",   // required by `RemoveUnused` rule
   "-opt:unreachable-code",  // Eliminate unreachable code, exception handlers guarding no instructions, redundant metadata (debug information, line numbers).
   "-opt:simplify-jumps",    // Simplify branching instructions, eliminate unnecessary ones.
-  "-opt:compact-locals",    // Eliminate empty slots in the sequence of local variables.
+  "-opt:compact-locals",    // Eliminate Empty slots in the sequence of local variables.
   "-opt:copy-propagation", // Eliminate redundant local variables and unused values (including closures). Enables unreachable-code.
   "-opt:redundant-casts",   // Eliminate redundant casts using a type propagation analysis.
   "-opt:box-unbox",         // Eliminate box-unbox pairs within the same method (also tuples, xRefs, value class instances). Enables unreachable-code.

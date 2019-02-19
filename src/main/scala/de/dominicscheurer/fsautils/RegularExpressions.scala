@@ -133,7 +133,7 @@ object RegularExpressions {
               case Empty() => lhs clean
               case Or(rhsInner, Star(Empty())) =>
                 lhs match {
-                  case Star(lhsInner) => {
+                  case Star(lhsInner) =>
                     val lhsInnerClean = lhsInner clean
                     val rhsInnerClean = rhsInner clean
 
@@ -142,12 +142,12 @@ object RegularExpressions {
                       Star(lhsInnerClean)
                     else
                       Concat(lhs clean, rhs clean)
-                  }
+
                   case _ => Concat(lhs clean, rhs clean)
                 }
               case Or(Star(Empty()), rhsInner) =>
                 lhs match {
-                  case Star(lhsInner) => {
+                  case Star(lhsInner) =>
                     val lhsInnerClean = lhsInner clean
                     val rhsInnerClean = rhsInner clean
 
@@ -156,7 +156,7 @@ object RegularExpressions {
                       Star(lhsInnerClean)
                     else
                       Concat(lhs clean, rhs clean)
-                  }
+
                   case _ => Concat(lhs clean, rhs clean)
                 }
               case _ => Concat(lhs clean, rhs clean)
@@ -235,7 +235,7 @@ object RegularExpressions {
       cache get this match {
         case None => {
           val genNFA =
-            ((lhs toNFAInt (alph, cache)) | (rhs toNFAInt (alph, cache))): NFA
+            (lhs toNFAInt (alph, cache)) | (rhs toNFAInt (alph, cache)): NFA
 
           cache += (this -> genNFA)
           genNFA
@@ -252,7 +252,7 @@ object RegularExpressions {
       cache get this match {
         case None => {
           val genNFA =
-            ((lhs toNFAInt (alph, cache)) ++ (rhs toNFAInt (alph, cache))): NFA
+            (lhs toNFAInt (alph, cache)) ++ (rhs toNFAInt (alph, cache)): NFA
 
           cache += (this -> genNFA)
           genNFA

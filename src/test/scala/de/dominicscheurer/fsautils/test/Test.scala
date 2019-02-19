@@ -42,7 +42,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
         (5, 'a) -> 5,
         (5, 'b) -> 6,
         (6, 'a) -> 6,
-        (6, 'b) -> 6)|
+        (6, 'b) -> 6) buildDfa
 
   //
   //        ,---.                 ,-;===:-.
@@ -67,7 +67,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
       'd ==> Delta(
         (1, 'a) -> Set(1),
         (1, 'b) -> Set(2),
-        (2, 'a) -> Set(2))||
+        (2, 'a) -> Set(2)) buildNfa
 
   //           a                a
   //         __..._          _,.....              ____
@@ -93,7 +93,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
         (2, 'a) -> 2,
         (2, 'b) -> 3,
         (3, 'a) -> 3,
-        (3, 'b) -> 3)|
+        (3, 'b) -> 3) buildDfa
 
   /////// DFA ///////
 
@@ -122,7 +122,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
   it should "be stable under Regular Expression building" in
     assert(dfa1.toRegExp.toNFA == dfa1)
 
-  "The result of a DFA minus itself" should "be empty" in
+  "The result of a DFA minus itself" should "be Empty" in
     assert((dfa1 \ dfa1).isEmpty)
 
   "The cut of a DFA with its star" should "be the DFA again" in
@@ -148,7 +148,7 @@ class Test extends FlatSpec with Matchers with FSA_DSL {
   it should "be stable under Regular Expression building" in
     assert(dfa1eqNFA.toRegExp.toNFA == dfa1eqNFA)
 
-  "The result of an NFA minus itself" should "be empty" in
+  "The result of an NFA minus itself" should "be Empty" in
     assert((dfa1eqNFA \ dfa1eqNFA).isEmpty)
 
   "The cut of an NFA with its star" should "be the NFA again" in
